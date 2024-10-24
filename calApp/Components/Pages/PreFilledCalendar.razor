@@ -1,0 +1,63 @@
+@page "/prefilled-calendar"
+@rendermode InteractiveServer
+@inject IJSRuntime JSRuntime
+@implements IAsyncDisposable
+
+<h1>Prefilled Calendar</h1>
+
+<div id="prefilled-calendar"></div>
+
+<button class="btn btn-primary mt-3" @onclick="AddRandomEvent">Add Random Event</button>
+
+@code {
+    private IJSObjectReference? module;
+    private List<CalendarEvent> prefilledEvents = new List<CalendarEvent>
+    {
+        new CalendarEvent { Title = "Meeting 1", Start = "2024-10-15" },
+        new CalendarEvent { Title = "Assingment Due", Start = "2024-10-18", End = "2024-10-19" },
+        new CalendarEvent { Title = "Presentation", Start = "2024-10-25" },
+        new CalendarEvent { Title = "Group Meeting", Start = "2024-11-04" },
+        new CalendarEvent { Title = "1 on 1 Meeting", Start = "2024-11-15" },
+        new CalendarEvent { Title = "Conference", Start = "2024-11-20", End = "2024-11-22" }
+    };
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender)
+        {
+            module = await JSRuntime.InvokeAsync<IJSObjectReference>("import", "/js/prefilled-calendar.js");
+            await module.InvokeVoidAsync("initializeCalendar", "prefilled-calendar", prefilledEvents);
+        }
+    }
+
+    private async Task AddRandomEvent()
+    {
+        if (module is not null)
+        {
+            await module.InvokeVoidAsync("addEvent");
+        }
+    }
+
+    public async ValueTask DisposeAsync()
+    {
+        if (module is not null)
+        {
+            await module.DisposeAsync();
+        }
+    }
+
+    private class CalendarEvent
+    {
+        public string Title { get; set; } = "";
+        public string Start { get; set; } = "";
+        public string? End { get; set; }
+    }
+}
+
+<style>
+    #prefilled-calendar {
+        max-width: 1100px;
+        margin: 40px auto;
+        height: 600px;
+    }
+</style>
